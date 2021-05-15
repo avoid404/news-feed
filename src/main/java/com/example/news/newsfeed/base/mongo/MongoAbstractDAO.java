@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -12,6 +13,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.support.PageableExecutionUtils;
 
 public abstract class MongoAbstractDAO<T> implements IBaseDAO<T> {
     @Autowired
@@ -119,10 +121,17 @@ public abstract class MongoAbstractDAO<T> implements IBaseDAO<T> {
     }
 
     @Override
-    public List<T> findAllByPage(Integer pageSize, Integer pageNumber, Direction order, String sortingProperty) {
+    public Page<T> findAllByPage(Integer pageSize, Integer pageNumber, Direction order, String sortingProperty) {
         try {
             List<Sort.Order> orderList = Collections.singletonList(new Sort.Order(order, sortingProperty));
-            return mongoTemplate.find(new Query().with(Sort.by(orderList)).with(PageRequest.of(pageNumber, pageSize)), getEntityClass()); //Test this query
+            Query query = new Query().with(Sort.by(orderList)).with(PageRequest.of(pageNumber, pageSize));
+            List<T> records =  mongoTemplate.find(query, getEntityClass()); //Test this query
+
+
+            return PageableExecutionUtils.getPage(
+                records,
+                PageRequest.of(pageNumber, pageSize),
+                () -> mongoTemplate.count(new Query().with(Sort.by(orderList)), getEntityClass())); 
         }
         catch(Exception e) {
             System.out.format("Cannot find data for page %d for class::%s\n", pageNumber, getEntityClass());

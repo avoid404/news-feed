@@ -3,6 +3,7 @@ package com.example.news.newsfeed.base.mongo;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -15,7 +16,7 @@ public interface IBaseDAO<T> {
 
     List<T> findAll();
 
-    List<T> findAllByPage(Integer pageSize, Integer pageNumber, Sort.Direction order, String sortingProperty);
+    Page<T> findAllByPage(Integer pageSize, Integer pageNumber, Sort.Direction order, String sortingProperty);
 
     T insert(T entity);
 

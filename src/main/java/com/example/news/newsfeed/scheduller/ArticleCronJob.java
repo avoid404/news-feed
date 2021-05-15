@@ -2,13 +2,13 @@ package com.example.news.newsfeed.scheduller;
 
 import java.util.List;
 
+import com.example.news.newsfeed.dao.ArticleDAO;
 import com.example.news.newsfeed.model.Article;
-import com.example.news.newsfeed.repository.ArticleRepository;
 import com.example.news.newsfeed.service.TechCrunchService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -19,10 +19,9 @@ public class ArticleCronJob {
     private String getTechCrunchArticles;
 
     @Autowired
-    private ArticleRepository articleRepository;
-
-    @Autowired
     private TechCrunchService articleService;
+
+    @Autowired private ArticleDAO articleDAO;
     
     @Scheduled(fixedRate = 600000)
     public void saveArticles() {
@@ -31,14 +30,8 @@ public class ArticleCronJob {
         // articleRepository.deleteAll();
 
         for(Article article: articles) {
-            try {
-                articleRepository.save(article);
-            }
-            catch(DuplicateKeyException e) {
-                System.out.println("url already present for author: " + article.getAuthor());
-            }
+            articleDAO.upsert(Criteria.where("url").is(article.getUrl()), article, null);
         };
-        // articleRepository.saveAll(articles);
     }
 
     public ArticleCronJob() {

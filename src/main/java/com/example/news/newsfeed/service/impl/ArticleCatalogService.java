@@ -2,6 +2,7 @@ package com.example.news.newsfeed.service.impl;
 
 import java.util.List;
 
+import com.example.news.newsfeed.dao.ArticleDAO;
 import com.example.news.newsfeed.model.Article;
 import com.example.news.newsfeed.model.ArticleCatalogResponseDTO;
 import com.example.news.newsfeed.repository.ArticleRepository;
@@ -9,8 +10,7 @@ import com.example.news.newsfeed.service.IArticleCatalogService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.stereotype.Service;
 
@@ -31,15 +31,18 @@ public class ArticleCatalogService implements IArticleCatalogService {
 
     @Autowired
     private ArticleRepository articleRepository;
+
+    @Autowired private ArticleDAO articleDAO;
     
     @Value("${newsfeed.article.pageSize}")
     private int pageSize = 10;
 
     @Override
     public ArticleCatalogResponseDTO getAllArticles() {
-        List<Article> articles = this.articleRepository.findAll(); 
+        List<Article> articles2 = articleDAO.findAll();
         ArticleCatalogResponseDTO articleCatalogResponseDTO = new ArticleCatalogResponseDTO();
-        articleCatalogResponseDTO.setArticles(articles);
+        articleCatalogResponseDTO.setArticles(articles2);
+        articleCatalogResponseDTO.setResults(articles2.size());
         return articleCatalogResponseDTO;
     }
 
@@ -48,15 +51,17 @@ public class ArticleCatalogService implements IArticleCatalogService {
         if(pageNumber <= -1) {
             // throw new Exception("Invalid Page Number: " + pageNumber);
         }
+        
+        List<Article> articles = articleDAO.findAllByPage(pageSize, pageNumber, Sort.Direction.DESC, "publishedAt");
 
-        Page<Article> page = this.articleRepository.findAll(PageRequest.of(pageNumber - 1, pageSize)); 
-        List<Article> articles = page.getContent();
-        int nextPage = page.hasNext() ? pageNumber + 1 : -1; 
+        // Page<Article> page = this.articleRepository.findAll(PageRequest.of(pageNumber - 1, pageSize)); 
+        // List<Article> articles = page.getContent();
+        int nextPage = articles.size() == pageSize ? pageNumber + 1 : -1; 
 
         ArticleCatalogResponseDTO articleCatalogResponseDTO = new ArticleCatalogResponseDTO();
         articleCatalogResponseDTO.setArticles(articles);
         articleCatalogResponseDTO.setNextPage(nextPage);
-        articleCatalogResponseDTO.setResults(page.getNumberOfElements());
+        articleCatalogResponseDTO.setResults(articles.size());
         return articleCatalogResponseDTO;
     }
     

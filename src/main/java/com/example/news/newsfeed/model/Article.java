@@ -1,7 +1,7 @@
 package com.example.news.newsfeed.model;
 
-import java.time.LocalDate;
 // import java.util.Date;
+import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -27,7 +27,7 @@ public class Article {
     @Indexed(unique = true)
     private String url;
     private String urlToImage;
-    private LocalDate publishedAt;
+    private LocalDateTime publishedAt;
     
     @TextIndexed(weight = 1)
     private String content;
